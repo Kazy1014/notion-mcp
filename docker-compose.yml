@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  notion-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: notion-mcp:latest
+    container_name: notion-mcp-server
+    environment:
+      - NOTION_API_KEY=${NOTION_API_KEY}
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    # Volume mount for persistent data (optional)
+    # volumes:
+    #   - ./data:/app/data
+    # Network configuration (optional)
+    # networks:
+    #   - mcp-network
+
+# Optional: Define custom network
+# networks:
+#   mcp-network:
+#     driver: bridge
+
