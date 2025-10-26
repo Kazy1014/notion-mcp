@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Notion MCP Server for Cursor and Claude integration",
   "license": "MIT",
-  "author": "",
+  "author": "Kazuya Oda",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
