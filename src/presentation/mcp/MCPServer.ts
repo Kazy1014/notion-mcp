@@ -98,17 +98,25 @@ export class MCPServer {
     return [
       {
         name: 'create_page',
-        description: 'Notionデータベースに新しいページを作成します',
+        description: 'Creates a new page (record) in a Notion database. Use this to add new entries such as tasks, projects, notes, etc. to any database. You can set properties like title, status, date, assignee, and more when creating the page.',
         inputSchema: {
           type: 'object',
           properties: {
             databaseId: {
               type: 'string',
-              description: 'データベースID',
+              description: 'The ID of the Notion database where the page will be created (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
             properties: {
               type: 'object',
-              description: 'ページのプロパティ',
+              description: `Properties to set for the new page. Use property names as keys and provide values according to property types. The format is the same as update_page.
+
+Example (creating a task):
+{
+  "Name": { "title": [{ "text": { "content": "Write weekly report" } }] },
+  "Status": { "select": { "name": "TODO" } },
+  "Priority": { "select": { "name": "High" } },
+  "Due Date": { "date": { "start": "2024-12-31" } }
+}`,
             },
           },
           required: ['databaseId', 'properties'],
@@ -116,13 +124,13 @@ export class MCPServer {
       },
       {
         name: 'get_page',
-        description: '指定されたIDのNotionページを取得します',
+        description: 'Retrieves detailed information about a specific Notion page (database record) by its ID. Returns all properties (fields), creation time, last edited time, archive status, and more.',
         inputSchema: {
           type: 'object',
           properties: {
             pageId: {
               type: 'string',
-              description: 'ページID',
+              description: 'The ID of the Notion page to retrieve (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
           },
           required: ['pageId'],
@@ -130,17 +138,63 @@ export class MCPServer {
       },
       {
         name: 'update_page',
-        description: 'Notionページを更新します',
+        description: 'Updates properties (fields) of a Notion page (database record). Supports ALL property types: title, status, date, checkbox, number, select, multi-select, URL, email, phone number, people, relations, and more. You can update individual properties or multiple properties simultaneously. Examples: change status to "Completed", update progress to 80%, set deadline to next Friday, change assignee, etc.',
         inputSchema: {
           type: 'object',
           properties: {
             pageId: {
               type: 'string',
-              description: 'ページID',
+              description: 'The ID of the Notion page to update (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
             properties: {
               type: 'object',
-              description: '更新するプロパティ',
+              description: `Object containing properties to update. Use property names as keys and provide values according to property types.
+
+Supported property types and formats:
+
+1. Title:
+   { "Name": { "title": [{ "text": { "content": "New title" } }] } }
+
+2. Rich Text:
+   { "Description": { "rich_text": [{ "text": { "content": "Description text" } }] } }
+
+3. Select:
+   { "Status": { "select": { "name": "In Progress" } } }
+
+4. Multi-select:
+   { "Tags": { "multi_select": [{ "name": "Important" }, { "name": "Urgent" }] } }
+
+5. Date:
+   { "Due Date": { "date": { "start": "2024-12-31" } } }
+   Date range: { "date": { "start": "2024-01-01", "end": "2024-12-31" } }
+
+6. Checkbox:
+   { "Completed": { "checkbox": true } }
+
+7. Number:
+   { "Progress": { "number": 75 } }
+
+8. URL:
+   { "Website": { "url": "https://example.com" } }
+
+9. Email:
+   { "Email": { "email": "user@example.com" } }
+
+10. Phone Number:
+    { "Phone": { "phone_number": "+1-234-567-8900" } }
+
+11. People:
+    { "Assignee": { "people": [{ "id": "user-id-123" }] } }
+
+12. Relation:
+    { "Related Project": { "relation": [{ "id": "page-id-456" }] } }
+
+Example updating multiple properties:
+{
+  "Status": { "select": { "name": "In Progress" } },
+  "Progress": { "number": 50 },
+  "Due Date": { "date": { "start": "2024-12-31" } }
+}`,
             },
           },
           required: ['pageId', 'properties'],
@@ -148,13 +202,13 @@ export class MCPServer {
       },
       {
         name: 'delete_page',
-        description: 'Notionページを削除（アーカイブ）します',
+        description: 'Deletes (archives) a Notion page (database record). In Notion, deletion is actually an archive operation and can be restored later. Use this to organize completed tasks, finished projects, etc.',
         inputSchema: {
           type: 'object',
           properties: {
             pageId: {
               type: 'string',
-              description: 'ページID',
+              description: 'The ID of the Notion page to delete (archive). Must be 32 or 36 character UUID format. Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
           },
           required: ['pageId'],
@@ -162,29 +216,41 @@ export class MCPServer {
       },
       {
         name: 'query_pages',
-        description: 'データベース内のページをクエリします',
+        description: 'Queries and retrieves pages (records) from a Notion database. Supports filtering and sorting. Examples: "tasks with status In Progress", "projects due this week", "tasks assigned to me". Retrieve pages matching specific conditions.',
         inputSchema: {
           type: 'object',
           properties: {
             databaseId: {
               type: 'string',
-              description: 'データベースID',
+              description: 'The ID of the Notion database to query (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
             filter: {
               type: 'object',
-              description: 'フィルター条件',
+              description: `Filter conditions (optional). Follows Notion API filter syntax.
+
+Examples:
+- Status equals "In Progress": { "property": "Status", "select": { "equals": "In Progress" } }
+- Checkbox is checked: { "property": "Completed", "checkbox": { "equals": true } }
+- Date is this week: { "property": "Due Date", "date": { "this_week": {} } }
+- Multiple conditions (AND): { "and": [condition1, condition2] }
+- Multiple conditions (OR): { "or": [condition1, condition2] }`,
             },
             sorts: {
               type: 'array',
-              description: 'ソート条件',
+              description: `Sort conditions (optional). Array of sort specifications.
+
+Examples:
+- Date ascending: [{ "property": "Due Date", "direction": "ascending" }]
+- Priority descending: [{ "property": "Priority", "direction": "descending" }]
+- Created time descending: [{ "timestamp": "created_time", "direction": "descending" }]`,
             },
             startCursor: {
               type: 'string',
-              description: 'ページネーションカーソル',
+              description: 'Pagination cursor (optional). Use the nextCursor from a previous query to fetch the next page of results.',
             },
             pageSize: {
               type: 'number',
-              description: '取得するページ数',
+              description: 'Number of pages to retrieve at once (optional, default: 100, max: 100). Use with pagination for large datasets.',
             },
           },
           required: ['databaseId'],
@@ -192,13 +258,13 @@ export class MCPServer {
       },
       {
         name: 'get_database',
-        description: '指定されたIDのNotionデータベースを取得します',
+        description: 'Retrieves detailed information about a specific Notion database by its ID. Returns database title, schema (property definitions), creation time, last edited time, and more. Use this to understand database structure.',
         inputSchema: {
           type: 'object',
           properties: {
             databaseId: {
               type: 'string',
-              description: 'データベースID',
+              description: 'The ID of the Notion database to retrieve (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
           },
           required: ['databaseId'],
@@ -206,7 +272,7 @@ export class MCPServer {
       },
       {
         name: 'list_databases',
-        description: 'アクセス可能なNotionデータベースの一覧を取得します',
+        description: 'Lists all Notion databases accessible to the integration. Returns each database\'s ID, title, creation time, and archive status. Use this to discover available databases.',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -214,21 +280,34 @@ export class MCPServer {
       },
       {
         name: 'update_database',
-        description: 'Notionデータベースを更新します',
+        description: 'Updates the database itself (not individual records). Can change database title or update schema (add/modify/delete properties/columns). Note: To update individual records, use update_page instead.',
         inputSchema: {
           type: 'object',
           properties: {
             databaseId: {
               type: 'string',
-              description: 'データベースID',
+              description: 'The ID of the Notion database to update (32 or 36 character UUID format). Example: "123e4567-e89b-12d3-a456-426614174000"',
             },
             title: {
               type: 'string',
-              description: '新しいタイトル',
+              description: 'New title for the database (optional). Example: "Task Management 2024"',
             },
             schema: {
               type: 'object',
-              description: '更新するスキーマ',
+              description: `Database schema (property definitions) to update (optional). Use property names as keys and property definitions as values.
+
+Example (adding a new property):
+{
+  "Priority": {
+    "select": {
+      "options": [
+        { "name": "High", "color": "red" },
+        { "name": "Medium", "color": "yellow" },
+        { "name": "Low", "color": "gray" }
+      ]
+    }
+  }
+}`,
             },
           },
           required: ['databaseId'],

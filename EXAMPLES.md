@@ -61,9 +61,241 @@
 
 ### 3. ページの更新
 
+Notionページの各プロパティ（項目）を個別または同時に更新できます。
+
+#### 基本的な更新
+
 ```typescript
 // Cursor/Claudeでの使用例
 "ページ（ID: xyz789）のステータスを「完了」に変更して"
+```
+
+#### 内部的なリクエスト形式
+
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "完了"
+      }
+    }
+  }
+}
+```
+
+#### プロパティタイプ別の更新例
+
+**1. テキスト（Title）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Name": {
+      "title": [
+        {
+          "text": {
+            "content": "更新されたタイトル"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+**2. リッチテキストの更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Description": {
+      "rich_text": [
+        {
+          "text": {
+            "content": "詳細な説明文"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+**3. セレクト（Select）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "進行中"
+      }
+    }
+  }
+}
+```
+
+**4. マルチセレクト（Multi-select）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Tags": {
+      "multi_select": [
+        { "name": "重要" },
+        { "name": "緊急" }
+      ]
+    }
+  }
+}
+```
+
+**5. 日付（Date）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Due Date": {
+      "date": {
+        "start": "2024-12-31"
+      }
+    }
+  }
+}
+```
+
+**6. 期間（Date Range）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Period": {
+      "date": {
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      }
+    }
+  }
+}
+```
+
+**7. チェックボックスの更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Completed": {
+      "checkbox": true
+    }
+  }
+}
+```
+
+**8. 数値（Number）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Progress": {
+      "number": 75
+    }
+  }
+}
+```
+
+**9. URL の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Website": {
+      "url": "https://example.com"
+    }
+  }
+}
+```
+
+**10. メールアドレスの更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Email": {
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
+**11. 電話番号の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Phone": {
+      "phone_number": "03-1234-5678"
+    }
+  }
+}
+```
+
+**12. ユーザー（People）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Assignee": {
+      "people": [
+        { "id": "user-id-123" }
+      ]
+    }
+  }
+}
+```
+
+**13. 関連ページ（Relation）の更新**
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Related Project": {
+      "relation": [
+        { "id": "project-page-id-456" }
+      ]
+    }
+  }
+}
+```
+
+#### 複数プロパティの同時更新
+
+```typescript
+// Cursor/Claudeでの使用例
+"タスク（ID: xyz789）のステータスを「進行中」、優先度を「高」、進捗を50%に更新して"
+```
+
+内部的には：
+```json
+{
+  "pageId": "xyz789",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "進行中"
+      }
+    },
+    "Priority": {
+      "select": {
+        "name": "高"
+      }
+    },
+    "Progress": {
+      "number": 50
+    }
+  }
+}
 ```
 
 ### 4. ページのクエリ
@@ -108,7 +340,49 @@
 "タスク「API設計レビュー」を完了にして"
 ```
 
-4. **統計情報の取得**
+内部的には、ページIDを取得してステータスを更新：
+```json
+{
+  "pageId": "取得したページID",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "完了"
+      }
+    }
+  }
+}
+```
+
+4. **タスクの詳細更新（複数項目同時）**
+
+```typescript
+"タスク「API設計レビュー」のステータスを「進行中」、進捗を80%、期限を明日に更新して"
+```
+
+内部的には：
+```json
+{
+  "pageId": "取得したページID",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "進行中"
+      }
+    },
+    "Progress": {
+      "number": 80
+    },
+    "Due Date": {
+      "date": {
+        "start": "2024-12-27"
+      }
+    }
+  }
+}
+```
+
+5. **統計情報の取得**
 
 ```typescript
 "タスクデータベースの統計情報を表示して（総数、完了数、未完了数）"
@@ -181,6 +455,46 @@
 
 ```typescript
 "プロジェクト「顧客管理システム刷新」の進捗を60%に更新して"
+```
+
+内部的には：
+```json
+{
+  "pageId": "取得したページID",
+  "properties": {
+    "Progress": {
+      "number": 60
+    }
+  }
+}
+```
+
+4. **プロジェクトの包括的な更新**
+
+```typescript
+"プロジェクト「顧客管理システム刷新」のステータスを「実行中」、進捗を75%、終了日を来月末に更新して"
+```
+
+内部的には：
+```json
+{
+  "pageId": "取得したページID",
+  "properties": {
+    "Status": {
+      "select": {
+        "name": "実行中"
+      }
+    },
+    "Progress": {
+      "number": 75
+    },
+    "End Date": {
+      "date": {
+        "start": "2025-01-31"
+      }
+    }
+  }
+}
 ```
 
 ## 高度な使用例
