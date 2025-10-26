@@ -8,6 +8,55 @@
 2. リポジトリの管理者権限があること
 3. GitHub SecretsにDocker Hub認証情報を設定していること
 
+### GitHub Secretsの設定方法
+
+GitHub Actionsで自動デプロイを使用する場合、以下のSecretsを設定する必要があります。
+
+#### ステップ1: Docker Hubアクセストークンを生成
+
+1. [Docker Hub](https://hub.docker.com/)にログイン
+2. 右上のアカウントアイコン → **Account Settings**
+3. **Security** タブをクリック
+4. **New Access Token** をクリック
+5. トークンの設定：
+   - **Description**: `GitHub Actions` (任意の名前)
+   - **Access permissions**: `Read, Write, Delete` を選択
+6. **Generate** をクリック
+7. ⚠️ **表示されたトークンをコピー**（再表示されません！）
+   - 例: `dckr_pat_1234567890abcdefghijklmnop`
+
+#### ステップ2: GitHubにSecretsを追加
+
+1. GitHubリポジトリ（`https://github.com/kazuyaoda/notion-mcp`）に移動
+2. **Settings** タブをクリック
+3. 左サイドバーから **Secrets and variables** → **Actions** を選択
+4. **New repository secret** をクリック
+
+**1つ目のSecret:**
+- **Name**: `DOCKERHUB_USERNAME`
+- **Value**: `kazuyaoda`
+- **Add secret** をクリック
+
+**2つ目のSecret:**
+- **Name**: `DOCKERHUB_TOKEN`
+- **Value**: (ステップ1でコピーしたトークン)
+- **Add secret** をクリック
+
+#### 設定確認
+
+`Settings` → `Secrets and variables` → `Actions` で以下が表示されるはずです：
+
+- ✓ `DOCKERHUB_USERNAME`
+- ✓ `DOCKERHUB_TOKEN`
+
+#### セキュリティのベストプラクティス
+
+- ✅ パスワードではなくアクセストークンを使用
+- ✅ トークンに必要最小限の権限のみ付与
+- ✅ トークンは絶対にコードにコミットしない
+- ✅ GitHub Secretsで安全に管理
+- ✅ 定期的にトークンをローテーション（推奨: 3-6ヶ月ごと）
+
 ## 手動公開
 
 ### 1. Docker Hubにログイン
