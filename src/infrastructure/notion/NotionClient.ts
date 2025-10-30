@@ -1,24 +1,42 @@
 /**
- * NotionClient - Notion APIクライアントのラッパー
+ * NotionClient - Notion APIクライアントのラッパー（Axios版）
  */
 
-import { Client } from '@notionhq/client';
+import axios, { AxiosInstance } from 'axios';
 
 export class NotionClient {
-  private client: Client;
+  private axiosInstance: AxiosInstance;
+  private apiKey: string;
 
   constructor(apiKey: string) {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error('Notion API key is required');
     }
-    this.client = new Client({ auth: apiKey });
+    this.apiKey = apiKey;
+    
+    // Axiosインスタンスを作成
+    this.axiosInstance = axios.create({
+      baseURL: 'https://api.notion.com/v1',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   /**
-   * Notion APIクライアントを取得
+   * Axiosインスタンスを取得
    */
-  getClient(): Client {
-    return this.client;
+  getAxiosInstance(): AxiosInstance {
+    return this.axiosInstance;
+  }
+
+  /**
+   * APIキーを取得
+   */
+  getApiKey(): string {
+    return this.apiKey;
   }
 
   /**
@@ -27,7 +45,7 @@ export class NotionClient {
   async validateApiKey(): Promise<boolean> {
     try {
       // ユーザー情報を取得して認証を確認
-      await this.client.users.me({});
+      await this.axiosInstance.get('/users/me');
       return true;
     } catch (error) {
       return false;

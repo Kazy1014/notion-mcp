@@ -18,8 +18,8 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@notionhq/client": "^2.2.14",
     "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.13.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

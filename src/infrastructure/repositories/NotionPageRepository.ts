@@ -1,41 +1,39 @@
 /**
- * NotionPageRepository - ページリポジトリの実装
+ * NotionPageRepository - ページリポジトリの実装（Axios版）
  */
 
-import { Client } from '@notionhq/client';
+import { AxiosInstance } from 'axios';
 import { IPageRepository, PageQueryOptions, PageQueryResult } from '../../domain/repositories/IPageRepository.js';
 import { Page, PageProperties } from '../../domain/entities/Page.js';
 import { PageId } from '../../domain/value-objects/PageId.js';
 import { DatabaseId } from '../../domain/value-objects/DatabaseId.js';
 
 export class NotionPageRepository implements IPageRepository {
-  constructor(private readonly client: Client) {}
+  constructor(private readonly axiosInstance: AxiosInstance) {}
 
   async create(databaseId: DatabaseId, properties: PageProperties): Promise<Page> {
     try {
-      const response = await this.client.pages.create({
+      const response = await this.axiosInstance.post('/pages', {
         parent: { database_id: databaseId.toString() },
         properties: properties as any,
       });
 
-      return this.mapToPage(response);
-    } catch (error) {
-      throw new Error(`Failed to create page: ${error}`);
+      return this.mapToPage(response.data);
+    } catch (error: any) {
+      throw new Error(`Failed to create page: ${error.response?.data?.message || error.message}`);
     }
   }
 
   async findById(id: PageId): Promise<Page | null> {
     try {
-      const response = await this.client.pages.retrieve({
-        page_id: id.toString(),
-      });
+      const response = await this.axiosInstance.get(`/pages/${id.toString()}`);
 
-      return this.mapToPage(response);
+      return this.mapToPage(response.data);
     } catch (error: any) {
-      if (error.code === 'object_not_found') {
+      if (error.response?.status === 404 || error.response?.data?.code === 'object_not_found') {
         return null;
       }
-      throw new Error(`Failed to retrieve page: ${error}`);
+      throw new Error(`Failed to retrieve page: ${error.response?.data?.message || error.message}`);
     }
   }
 
@@ -44,47 +42,44 @@ export class NotionPageRepository implements IPageRepository {
     options?: PageQueryOptions
   ): Promise<PageQueryResult> {
     try {
-      const response = await this.client.databases.query({
-        database_id: databaseId.toString(),
+      const response = await this.axiosInstance.post(`/databases/${databaseId.toString()}/query`, {
         filter: options?.filter as any,
         sorts: options?.sorts as any,
         start_cursor: options?.startCursor,
         page_size: options?.pageSize,
       });
 
-      const pages = response.results.map((result) => this.mapToPage(result));
+      const pages = response.data.results.map((result: any) => this.mapToPage(result));
 
       return {
         pages,
-        hasMore: response.has_more,
-        nextCursor: response.next_cursor || undefined,
+        hasMore: response.data.has_more,
+        nextCursor: response.data.next_cursor || undefined,
       };
-    } catch (error) {
-      throw new Error(`Failed to query pages: ${error}`);
+    } catch (error: any) {
+      throw new Error(`Failed to query pages: ${error.response?.data?.message || error.message}`);
     }
   }
 
   async update(id: PageId, properties: Partial<PageProperties>): Promise<Page> {
     try {
-      const response = await this.client.pages.update({
-        page_id: id.toString(),
+      const response = await this.axiosInstance.patch(`/pages/${id.toString()}`, {
         properties: properties as any,
       });
 
-      return this.mapToPage(response);
-    } catch (error) {
-      throw new Error(`Failed to update page: ${error}`);
+      return this.mapToPage(response.data);
+    } catch (error: any) {
+      throw new Error(`Failed to update page: ${error.response?.data?.message || error.message}`);
     }
   }
 
   async archive(id: PageId): Promise<void> {
     try {
-      await this.client.pages.update({
-        page_id: id.toString(),
+      await this.axiosInstance.patch(`/pages/${id.toString()}`, {
         archived: true,
       });
-    } catch (error) {
-      throw new Error(`Failed to archive page: ${error}`);
+    } catch (error: any) {
+      throw new Error(`Failed to archive page: ${error.response?.data?.message || error.message}`);
     }
   }
 

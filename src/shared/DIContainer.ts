@@ -37,10 +37,10 @@ export class DIContainer {
   initialize(apiKey: string): void {
     // Infrastructure layer
     this.notionClient = new NotionClient(apiKey);
-    const client = this.notionClient.getClient();
+    const axiosInstance = this.notionClient.getAxiosInstance();
     
-    this.pageRepository = new NotionPageRepository(client);
-    this.databaseRepository = new NotionDatabaseRepository(client);
+    this.pageRepository = new NotionPageRepository(axiosInstance);
+    this.databaseRepository = new NotionDatabaseRepository(axiosInstance);
 
     // Domain layer
     this.notionService = new NotionService(
