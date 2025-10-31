@@ -5,6 +5,10 @@
 
 Notion API連携を行うMCP（Model Context Protocol）サーバー。CursorやClaudeと連携し、NotionのデータベースへのCRUD操作を可能にします。
 
+<a href="https://glama.ai/mcp/servers/@Kazy1014/notion-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Kazy1014/notion-mcp/badge" alt="Notion Server MCP server" />
+</a>
+
 ## 特徴
 
 - **DDD（ドメイン駆動設計）**: 保守性の高いアーキテクチャ
@@ -188,4 +192,3 @@ docker build -t notion-mcp:latest .
 ## ライセンス
 
 MIT
-
